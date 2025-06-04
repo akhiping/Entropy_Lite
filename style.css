@@ -1,0 +1,214 @@
+/* Style for sticky notes manually created or future editable */
+.sticky-note {
+  background: #944e18;
+  border: 1px solid #e6c200;
+  padding: 8px;
+  margin-top: 4px;
+  font-size: 14px;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  white-space: pre-wrap;
+  max-width: 400px;
+}
+.sticky-container {
+  position: sticky;
+  top: 0; /* Or wherever you want it to stick */
+  height: 0;
+  overflow: visible;
+}
+
+/* Chat popup box */
+.gpt-response {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.gpt-response:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.gpt-response .header {
+  background: rgba(0, 0, 0, 0.03);
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gpt-response .header-buttons {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.gpt-response .title-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.gpt-response .title-input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #111;
+}
+
+.gpt-response .color-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.gpt-response .color-option {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.gpt-response .color-option:hover {
+  transform: scale(1.1);
+}
+
+.gpt-response .context-label {
+  font-size: 12px;
+  color: #666;
+  padding: 4px 0;
+}
+
+.gpt-response .chat-history {
+  padding: 8px;
+  overflow-y: auto;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.gpt-response .chat-input {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border-top: 1px solid #eee;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.gpt-response .chat-input input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 14px;
+  color: #111;
+}
+
+.gpt-response .chat-input button {
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.gpt-response .chat-input button:hover {
+  background: #0056b3;
+}
+
+.gpt-response .close-btn,
+.gpt-response .minimize-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: background 0.2s ease;
+}
+
+.gpt-response .close-btn:hover,
+.gpt-response .minimize-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.gpt-response .resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 50%, #ccc 50%);
+}
+
+.gpt-response .user-msg,
+.gpt-response .bot-msg {
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.gpt-response .user-msg {
+  background: rgba(0, 122, 255, 0.1);
+  color: #007AFF;
+}
+
+.gpt-response .bot-msg {
+  background: rgba(0, 0, 0, 0.05);
+  color: #333;
+}
+
+#inline-comment-btn {
+  position: absolute;
+  z-index: 2147483647;
+  background: #f0f0f0;
+  border: 1px solid #aaa;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: #000;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+#inline-comment-btn:hover {
+  background: #e0e0e0;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gpt-response .stack-arrows button {
+  color: #111 !important;
+  font-weight: bold;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 4px;
+}
