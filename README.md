@@ -1,139 +1,118 @@
-# Entropy – ChatGPT Persistent Sticky Notes
+# Entropy Lite – ChatGPT Sticky Notes Extension
 
-> Transform ChatGPT into a branching, non-linear ideation system with persistent sticky notes.
+> A browser extension that transforms ChatGPT into a branching, non-linear ideation workspace with persistent sticky notes.
 
-## 🌟 Features
+![License](https://img.shields.io/badge/License-BSL%201.1-blue.svg)
+![Chrome](https://img.shields.io/badge/Chrome-Supported-green.svg)
+![Version](https://img.shields.io/badge/Version-1.0.0-brightgreen.svg)
 
-### 📌 Persistent Sticky Notes
-- **Create contextual notes** from any selected text in ChatGPT
-- **Chat-powered sticky notes** - each note is a mini GPT conversation
-- **Cross-session persistence** - notes stay exactly where you placed them
-- **Per-chat organization** - notes are automatically organized by conversation
+##  What is Entropy Lite?
 
-### 🎨 Rich Customization
-- **Color-coded notes** with 5 color themes
-- **Custom titles** and labels for organization
-- **Resizable and draggable** notes
-- **Minimize/expand** functionality
+Entropy Lite enhances your ChatGPT experience by allowing you to:
 
-### 📚 Smart Stacking
-- **Automatic stacking** when notes overlap
-- **Stack navigation** with arrow controls
-- **Visual organization** of related ideas
+- **Create contextual sticky notes** from any text in ChatGPT conversations
+- **Branch conversations** without losing the main thread
+- **Organize ideas visually** with color-coded, persistent notes
+- **Stack related concepts** for better organization
+- **Navigate between chats** while maintaining your note workspace
 
-### 🤖 ChatGPT Integration
-- **Contextual conversations** - each note remembers the selected text
-- **OpenAI API integration** for real responses
-- **Conversation history** within each note
+Perfect for researchers, writers, developers, and anyone who thinks non-linearly!
 
-## 🚀 Installation
+##  Quick Start
 
-### 1. Download the Extension
-```bash
-git clone https://github.com/yourusername/entropy-chatgpt-extension.git
-cd entropy-chatgpt-extension
-```
+### Installation
+1. Download the extension files
+2. Open Chrome → Extensions → Developer Mode
+3. Load unpacked extension
+4. Add your OpenAI API key in options
+5. Visit ChatGPT and start creating notes!
 
-### 2. Load in Chrome
-1. Open Chrome and go to `chrome://extensions/`
-2. Enable **Developer Mode** (toggle in top right)
-3. Click **Load unpacked**
-4. Select the extension folder
+### Basic Usage
+1. **Select text** in any ChatGPT conversation
+2. Click the **"entertain"** button that appears
+3. **Ask questions** or make notes about the selected context
+4. **Customize** with colors and titles
+5. **Drag and stack** related notes
 
-### 3. Configure API Key
-1. Click the extension icon in your browser
-2. Go to **Options**
-3. Enter your OpenAI API key
-4. Save settings
+##  Key Features
 
-## 💡 How to Use
+###  Smart Sticky Notes
+- Context-aware conversations within each note
+- Persistent across browser sessions
+- Automatic organization by chat
 
-### Creating a Sticky Note
-1. Go to [ChatGPT](https://chat.openai.com/)
-2. **Select any text** in a conversation
-3. Click the **"entertain"** button that appears
-4. A sticky note will be created at that location
+###  Visual Organization
+- 5 color themes (Pastel, Warm, Cold, Vintage, Classic)
+- Custom titles and labels
+- Drag-and-drop positioning
+- Minimize/expand functionality
 
-### Using Sticky Notes
-- **Ask questions** about the selected context
-- **Customize** with colors and titles
-- **Resize and reposition** as needed
-- **Navigate between chats** - notes persist automatically
+###  Intelligent Stacking
+- Automatic grouping of overlapping notes
+- Navigate stacks with arrow controls
+- Visual hierarchy of related ideas
 
-### Managing Stacks
-- **Drag notes close together** to create stacks
-- **Use arrow buttons** to navigate through stacked notes
-- **Automatic organization** keeps related ideas together
+###  Cross-Chat Persistence
+- Notes stay exactly where you placed them
+- Organized automatically by conversation
+- No data loss between sessions
 
-## ⚙️ Configuration
+##  Use Cases
 
-### API Key Setup
-You'll need an OpenAI API key to enable the chat functionality:
+- **Academic Research**: Branch off to explore tangential concepts
+- **Creative Writing**: Develop character arcs and plot threads
+- **Code Planning**: Explore different implementation approaches  
+- **Learning**: Create study notes from AI explanations
+- **Brainstorming**: Organize complex ideas visually
 
-1. Get an API key from [OpenAI](https://platform.openai.com/api-keys)
-2. Open extension options
-3. Enter your API key
-4. Save and refresh ChatGPT
+##  Setup Requirements
 
-### Debug Mode
-For developers or troubleshooting:
-- Edit `content.js` 
-- Set `DEBUG_MODE = true` for detailed logging
-- Reload the extension
+- **Browser**: Chrome or Chromium-based browsers
+- **API Key**: OpenAI API key for chat functionality
+- **Storage**: Local browser storage for persistence
 
-## 🛠️ Technical Details
+##  Privacy & Data
 
-### Architecture
-- **Content Script**: Main functionality and UI
-- **Background Script**: OpenAI API integration
-- **Local Storage**: Persistent note storage
-- **CSS Injection**: Custom styling
+- **100% Local Storage**: All notes stored in your browser only
+- **No Data Collection**: Extension doesn't track or collect usage data
+- **No External Servers**: Direct OpenAI API communication only
+- **Open Source**: Full code available for security review
 
-### Browser Support
-- **Chrome**: Full support (Manifest V3)
-- **Edge**: Should work (untested)
-- **Firefox**: Not supported (different manifest format)
+##  License & Terms
 
-## 🔐 Privacy & Security
+This project is licensed under the **Business Source License 1.1 (BSL)**:
 
-- **Local storage only** - all notes stored in your browser
-- **No data collection** - extension doesn't track usage
-- **API key security** - stored locally in browser storage
-- **Open source** - full code available for review
+-  **Personal & Academic Use**: Freely use for learning and research
+-  **Contributions Welcome**: Open to community improvements
+-  **Commercial Use Restricted**: No commercial deployment without license
+-  **Future Open Source**: Converts to Apache 2.0 after May 14, 2028
 
-## 🐛 Known Issues & Limitations
+For commercial licensing or partnership inquiries, please contact the maintainer.
 
-- **ChatGPT UI updates** may temporarily break positioning
-- **API costs** - each note conversation uses your OpenAI credits
-- **Chrome only** - currently supports Chrome/Chromium browsers
-- **No sync** - notes don't sync between devices
+##  Contributing
 
-## 🔄 Updates & Maintenance
-
-The extension automatically handles:
-- **Storage cleanup** - removes corrupted data
-- **Position correction** - fixes note positioning issues  
-- **Cross-chat isolation** - prevents note contamination
-
-## 🤝 Contributing
+We welcome contributions! Please:
 
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
+3. Follow existing code style
+4. Test your changes thoroughly
 5. Submit a pull request
 
-## 📄 License
+##  Support
 
-MIT License - see [LICENSE.md](LICENSE.md) for details
+- **Issues**: Report bugs via GitHub Issues
+- **Discussions**: Feature requests and ideas welcome
+- **Documentation**: Check the wiki for advanced usage
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Built for the ChatGPT community
-- Inspired by non-linear thinking and ideation tools
-- Thanks to all contributors and users
+- Inspired by tools like Roam Research and mind mapping software
+- Thanks to all contributors and early users
 
 ---
 
-**Ready to transform your ChatGPT experience?** Install Entropy and start organizing your AI conversations like never before!
+**Transform your ChatGPT experience today!** 
 
+*Remember: This tool enhances but doesn't replace the core ChatGPT functionality. It works alongside the official interface to provide a richer ideation experience.* 
