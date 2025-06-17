@@ -1,140 +1,139 @@
-# Entropy Lite – Branching Conversations for ChatGPT
+# Entropy – ChatGPT Persistent Sticky Notes
 
-> "Linear conversation is for machines. **Exploration** is for minds."  
-> *– Akhila Pingali*
+> Transform ChatGPT into a branching, non-linear ideation system with persistent sticky notes.
+
+## 🌟 Features
+
+### 📌 Persistent Sticky Notes
+- **Create contextual notes** from any selected text in ChatGPT
+- **Chat-powered sticky notes** - each note is a mini GPT conversation
+- **Cross-session persistence** - notes stay exactly where you placed them
+- **Per-chat organization** - notes are automatically organized by conversation
+
+### 🎨 Rich Customization
+- **Color-coded notes** with 5 color themes
+- **Custom titles** and labels for organization
+- **Resizable and draggable** notes
+- **Minimize/expand** functionality
+
+### 📚 Smart Stacking
+- **Automatic stacking** when notes overlap
+- **Stack navigation** with arrow controls
+- **Visual organization** of related ideas
+
+### 🤖 ChatGPT Integration
+- **Contextual conversations** - each note remembers the selected text
+- **OpenAI API integration** for real responses
+- **Conversation history** within each note
+
+## 🚀 Installation
+
+### 1. Download the Extension
+```bash
+git clone https://github.com/yourusername/entropy-chatgpt-extension.git
+cd entropy-chatgpt-extension
+```
+
+### 2. Load in Chrome
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable **Developer Mode** (toggle in top right)
+3. Click **Load unpacked**
+4. Select the extension folder
+
+### 3. Configure API Key
+1. Click the extension icon in your browser
+2. Go to **Options**
+3. Enter your OpenAI API key
+4. Save settings
+
+## 💡 How to Use
+
+### Creating a Sticky Note
+1. Go to [ChatGPT](https://chat.openai.com/)
+2. **Select any text** in a conversation
+3. Click the **"entertain"** button that appears
+4. A sticky note will be created at that location
+
+### Using Sticky Notes
+- **Ask questions** about the selected context
+- **Customize** with colors and titles
+- **Resize and reposition** as needed
+- **Navigate between chats** - notes persist automatically
+
+### Managing Stacks
+- **Drag notes close together** to create stacks
+- **Use arrow buttons** to navigate through stacked notes
+- **Automatic organization** keeps related ideas together
+
+## ⚙️ Configuration
+
+### API Key Setup
+You'll need an OpenAI API key to enable the chat functionality:
+
+1. Get an API key from [OpenAI](https://platform.openai.com/api-keys)
+2. Open extension options
+3. Enter your API key
+4. Save and refresh ChatGPT
+
+### Debug Mode
+For developers or troubleshooting:
+- Edit `content.js` 
+- Set `DEBUG_MODE = true` for detailed logging
+- Reload the extension
+
+## 🛠️ Technical Details
+
+### Architecture
+- **Content Script**: Main functionality and UI
+- **Background Script**: OpenAI API integration
+- **Local Storage**: Persistent note storage
+- **CSS Injection**: Custom styling
+
+### Browser Support
+- **Chrome**: Full support (Manifest V3)
+- **Edge**: Should work (untested)
+- **Firefox**: Not supported (different manifest format)
+
+## 🔐 Privacy & Security
+
+- **Local storage only** - all notes stored in your browser
+- **No data collection** - extension doesn't track usage
+- **API key security** - stored locally in browser storage
+- **Open source** - full code available for review
+
+## 🐛 Known Issues & Limitations
+
+- **ChatGPT UI updates** may temporarily break positioning
+- **API costs** - each note conversation uses your OpenAI credits
+- **Chrome only** - currently supports Chrome/Chromium browsers
+- **No sync** - notes don't sync between devices
+
+## 🔄 Updates & Maintenance
+
+The extension automatically handles:
+- **Storage cleanup** - removes corrupted data
+- **Position correction** - fixes note positioning issues  
+- **Cross-chat isolation** - prevents note contamination
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+MIT License - see [LICENSE.md](LICENSE.md) for details
+
+## 🙏 Acknowledgments
+
+- Built for the ChatGPT community
+- Inspired by non-linear thinking and ideation tools
+- Thanks to all contributors and users
 
 ---
 
-## 🟣 Overview
-
-**Entropy Lite** reimagines how we interact with AI. Created by **Akhila Pingali**, this tool transforms ChatGPT's linear chat format into a **dynamic, branching conversation environment** where you can explore side thoughts and questions without losing your main thread.
-
-Through intuitive visual anchors and floating chat portals, Entropy Lite lets you **pause any moment**, **branch off an idea**, and **explore new directions** while keeping your original conversation intact.
-
----
-
-## 🌱 Why Entropy Lite?
-
-Traditional AI chat tools are powerful but follow a **linear format**. This becomes limiting when you're:
-
-- Brainstorming and want to follow multiple idea threads
-- Researching and need to clarify concepts without losing your place
-- Writing and want to explore alternate directions
-- Problem-solving and considering multiple approaches
-
-**Real thinking is messy, non-linear, and layered.** Ideas overlap, questions emerge mid-flow, and tangents often lead to breakthroughs. Entropy Lite honors this natural flow of thought — providing structure without restriction.
-
----
-
-## ✨ What Entropy Lite Enables
-
-### 🧩 Branching Conversations
-
-At any point in a ChatGPT response, you can click to open a **mini chat portal**. This creates a **branch** — a dedicated space where side ideas or clarifications can be explored without interrupting your main conversation.
-
-### 🧠 Smart Side Notes
-
-Each branch acts like a living sticky note powered by GPT. It captures questions, insights, and iterations right where the idea occurred, maintaining visual connection to the original context.
-
-### 🏷️ Organized Exploration
-
-Assign **labels** and **colors** to distinguish different types of branches (clarifications, alternatives, definitions, etc.). Transform scattered thoughts into a structured canvas of reasoning.
-
-### 🔁 Persistent Memory
-
-All branches are saved and reopenable. Return to any moment, recall side threads, and continue building upon them whenever you're ready.
-
----
-
-## 🎯 Who Is Entropy Lite For?
-
-Perfect for anyone who uses AI as a creative or intellectual partner:
-
-- **Researchers** exploring hypotheses and side questions
-- **Writers** developing plots and exploring alternatives
-- **Developers** troubleshooting and comparing solutions
-- **Students** asking clarifying questions mid-study
-- **Anyone** who thinks *"I want to explore this... but not lose my main thread"*
-
----
-
-## 🛠️ How It Works
-
-1. Have a normal conversation with ChatGPT
-2. At any point, **select text or click a position** and hit the "💬 branch" button
-3. A **mini GPT chat window** opens for your side question or tangent
-4. The AI responds, and your branch conversation begins
-5. **Name and color** your branch for easy reference
-6. All branches stay accessible — expand, collapse, or revisit anytime
-7. Your main conversation continues uninterrupted
-
----
-
-## 🌿 The Philosophy
-
-The name *Entropy* represents the organic disorder of thought — the creative chaos that happens when you're truly exploring ideas. But Entropy Lite doesn't stop at chaos; it adds **thoughtful organization** to capture and structure that organic thinking.
-
-Entropy Lite allows you to:
-- Embrace tangents without losing focus
-- Capture ideas in the moment
-- Build layered understanding
-- Think the way minds actually work
-
-It's **thought scaffolding** for the AI age.
-
----
-
-## 🚀 Technical Notes
-
-**What You Need:**
-- Chrome browser
-- Your own OpenAI API key
-- ChatGPT access
-
-**How It Works:**
-- Entropy Lite operates as a browser extension overlay
-- Branches are separate API calls to maintain isolation
-- All data stored locally for privacy
-- Each branch conversation is independent
-
----
-
-## 🔐 Privacy & Control
-
-- **Your data stays with you** — all conversations stored locally
-- **Your API key** — you control your OpenAI usage and costs
-- **No external servers** — everything runs in your browser
-
----
-
-## ⚠️ Current Limitations
-
-- Chrome browser only (for now)
-- Requires personal OpenAI API key
-- Branch conversations don't share memory with main thread
-- UI may need updates if ChatGPT changes their interface
-- Each branch uses API tokens (your usage, your cost)
-
----
-
-## 🧭 The Vision
-
-Entropy Lite is the first step toward a new paradigm of AI interaction — where conversations grow like trees, not trains on tracks. Created by **Akhila Pingali**, it paves the way for:
-
-- Visual knowledge networks
-- Non-linear creative exploration  
-- Context-preserved ideation
-- AI as a true thinking partner
-
----
-
-## 🔗 Join the Exploration
-
-Ready to think beyond the linear? **Entropy Lite** transforms how you explore ideas with AI.
-
-> 🧠 *Because the best ideas are often the ones you almost skipped.*
-
----
-
-*Entropy Lite – Created by Akhila Pingali*
+**Ready to transform your ChatGPT experience?** Install Entropy and start organizing your AI conversations like never before!
 

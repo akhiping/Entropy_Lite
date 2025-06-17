@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Entropy - ChatGPT Branching Extension",
-  "version": "1.0",
-  "description": "Transform ChatGPT into a branching, non-linear ideation system with sticky notes.",
+  "name": "Entropy - ChatGPT Persistent Sticky Notes",
+  "version": "1.0.0",
+  "description": "Create persistent, contextual sticky notes in ChatGPT. Transform conversations into organized, searchable knowledge with smart stacking and OpenAI integration.",
   "icons": {
     "16": "icons/icon.png",
     "48": "icons/icon.png",
@@ -20,7 +20,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Entropy - ChatGPT Branching"
+    "default_title": "Entropy - ChatGPT Sticky Notes"
   },
   "background": {
     "service_worker": "background.js"

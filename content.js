@@ -1,13 +1,41 @@
 // == Entropy Lite Sticky Notes: Per-Chat, Persistent, Non-Following ==
 
-console.log("✅ Entropy Lite loaded");
+// Debug flag - set to false for production
+const DEBUG_MODE = false;
+
+// Debug logging function
+function debugLog(...args) {
+  if (DEBUG_MODE) {
+    console.log('[Entropy Debug]', ...args);
+  }
+}
+
+// Essential logging function for errors and important events
+function log(...args) {
+  console.log('[Entropy]', ...args);
+}
+
+log("✅ Entropy Lite loaded");
 
 // ========== Helpers ==========
 
 // Returns current chat ID (from /c/{id}), or uses pathname as fallback
 function getCurrentChatId() {
-  const match = window.location.pathname.match(/\/c\/([\w-]+)/);
-  return match ? match[1] : window.location.pathname;
+  // More robust chat ID extraction
+  const url = window.location.href;
+  const pathname = window.location.pathname;
+  
+  // Try to match the chat ID from the URL
+  const match = pathname.match(/\/c\/([\w-]+)/);
+  if (match) {
+    const chatId = match[1];
+    debugLog(`Extracted chat ID: ${chatId} from URL: ${url}`);
+    return chatId;
+  }
+  
+  // Fallback to pathname if no match found
+  debugLog(`No chat ID found in URL: ${url}, using pathname: ${pathname}`);
+  return pathname;
 }
 function chatKey() {
   return `entropy_chat_${getCurrentChatId()}`;
@@ -28,7 +56,7 @@ class StickyNote {
     this.element = null;
     this._retryCount = 0;
     this.isMinimized = stickyData.content?.isMinimized || false;
-    this.color = stickyData.color || '#ffffff';
+    this.color = stickyData.color || 'rgba(255, 248, 150, 0.85)'; // Mild sticky-note yellow
     this.title = stickyData.title || (stickyData.content?.context?.substring(0, 30) + (stickyData.content?.context?.length > 30 ? '...' : '')) || 'Untitled';
     this.zIndex = stickyData.zIndex || 1000;
     this.stackId = stickyData.stackId || null;
@@ -66,20 +94,74 @@ class StickyNote {
         <div class="header-buttons">
           <button class="close-btn">✖</button>
           <button class="minimize-btn">${content.isMinimized ? '+' : '—'}</button>
+          <!-- <button class="export-btn" title="Export options">📤</button> -->
           <span class="stack-arrows" style="display:none">
             <button class="stack-left">⟨</button>
             <button class="stack-right">⟩</button>
           </span>
         </div>
+        <!-- <div class="export-dropdown" style="display: none;">
+          <div class="export-option" data-export="notion">
+            <span class="export-icon">📝</span>
+            <span class="export-label">Export to Notion</span>
+          </div>
+          <div class="export-option" data-export="markdown">
+            <span class="export-icon">📄</span>
+            <span class="export-label">Copy as Markdown</span>
+          </div>
+          <div class="export-option" data-export="json">
+            <span class="export-icon">🔧</span>
+            <span class="export-label">Export as JSON</span>
+          </div>
+          <div class="export-option" data-export="email">
+            <span class="export-icon">📧</span>
+            <span class="export-label">Send via Email</span>
+          </div>
+          <div class="export-option" data-export="clipboard">
+            <span class="export-icon">📋</span>
+            <span class="export-label">Copy to Clipboard</span>
+          </div>
+        </div> -->
         <div class="title-bar">
           <input type="text" class="title-input" value="${this.title}" />
-          <div class="color-picker">
-            <div class="color-option" data-color="#ffffff" style="background: #ffffff"></div>
-            <div class="color-option" data-color="#ffebee" style="background: #ffebee"></div>
-            <div class="color-option" data-color="#e8f5e9" style="background: #e8f5e9"></div>
-            <div class="color-option" data-color="#e3f2fd" style="background: #e3f2fd"></div>
-            <div class="color-option" data-color="#fff3e0" style="background: #fff3e0"></div>
-          </div>
+                      <div class="color-picker">
+             <div class="theme-selector">
+               <div class="theme-circle" data-theme="pastel" title="Pastel">
+                 <div class="theme-preview">
+                   <div style="background: rgba(255, 182, 193, 0.8);"></div>
+                   <div style="background: rgba(221, 160, 221, 0.8);"></div>
+                   <div style="background: rgba(173, 216, 230, 0.8);"></div>
+                 </div>
+               </div>
+               <div class="theme-circle" data-theme="warm" title="Warm">
+                 <div class="theme-preview">
+                   <div style="background: rgba(255, 99, 71, 0.8);"></div>
+                   <div style="background: rgba(255, 165, 0, 0.8);"></div>
+                   <div style="background: rgba(255, 215, 0, 0.8);"></div>
+                 </div>
+               </div>
+               <div class="theme-circle" data-theme="cold" title="Cold">
+                 <div class="theme-preview">
+                   <div style="background: rgba(70, 130, 180, 0.8);"></div>
+                   <div style="background: rgba(32, 178, 170, 0.8);"></div>
+                   <div style="background: rgba(72, 209, 204, 0.8);"></div>
+                 </div>
+               </div>
+               <div class="theme-circle" data-theme="vintage" title="Vintage">
+                 <div class="theme-preview">
+                   <div style="background: rgba(139, 69, 19, 0.8);"></div>
+                   <div style="background: rgba(160, 82, 45, 0.8);"></div>
+                   <div style="background: rgba(188, 143, 143, 0.8);"></div>
+                 </div>
+               </div>
+             </div>
+             <div class="color-options">
+               <!-- Colors will be populated dynamically -->
+             </div>
+             <div class="color-option transparent-option" data-color="transparent" style="background: transparent; border: 1px dashed #888;">
+               <span style="font-size: 10px; color: #666;">Clear</span>
+             </div>
+            </div>
         </div>
         <div class="context-label"><strong>Context:</strong> ${content.context}</div>
       </div>
@@ -88,7 +170,7 @@ class StickyNote {
         <input type="text" class="chat-message-input" style="flex:1" placeholder="Ask something relevant..." />
         <button class="send-btn">➤</button>
       </div>
-      <div class="resize-handle" style="width:18px;height:18px;position:absolute;right:0;bottom:0;cursor:se-resize;background:#ddd"></div>
+      <div class="resize-handle"></div>
     `;
 
     // Try to find anchor
@@ -113,8 +195,8 @@ class StickyNote {
       anchorElem = document.querySelector('main') || document.body;
       box.style.top = '40px';
       box.style.left = '40px';
-      box.style.width = '340px';
-      box.style.height = '220px';
+      box.style.width = '320px';
+      box.style.height = '200px';
     }
     
     // Ensure anchor is positioned for relative positioning
@@ -129,7 +211,7 @@ class StickyNote {
     // BUT: If this sticky is part of a stack, don't position it yet - let stack restoration handle it
     if (this.stackId) {
       // This sticky is part of a stack - use default position for now, stack restoration will fix it
-      console.log(`[Entropy] Sticky ${this.data.id} is part of stack ${this.stackId}, skipping individual positioning`);
+      debugLog(`Sticky ${this.data.id} is part of stack ${this.stackId}, skipping individual positioning`);
       box.style.top = '100px';
       box.style.left = '100px';
     } else if (anchorElem && anchorElem !== document.body && 
@@ -152,7 +234,13 @@ class StickyNote {
     this.initializeColorPicker();
     this.initializeTitleEdit();
     this.initializeStackArrows();
-    this.adjustLayout();
+    // this.initializeExportFeatures();
+    
+    // Adjust layout for proper sizing - wait for DOM to be fully added, then adjust multiple times
+    setTimeout(() => this.adjustLayout(), 0);
+    setTimeout(() => this.adjustLayout(), 50);
+    setTimeout(() => this.adjustLayout(), 150);
+    
     if (content.isMinimized) this.minimize();
     return box;
   }
@@ -167,6 +255,9 @@ class StickyNote {
       chatHistory.appendChild(div);
     }
     chatHistory.scrollTop = chatHistory.scrollHeight;
+    
+    // Adjust layout after setting content
+    setTimeout(() => this.adjustLayout(), 50);
   }
 
   updateContextDisplay() {
@@ -254,14 +345,14 @@ class StickyNote {
   }
 
   remove() {
-    console.log(`[Entropy] 🗑️ REMOVING STICKY ${this.data.id} from chat ${getCurrentChatId()}`);
+    debugLog(`Removing sticky ${this.data.id} from chat ${getCurrentChatId()}`);
     
     const stickyStorageKey = stickyKey(this.data.id);
     const chatK = chatKey();
     
     // Remove from stack if it's part of one
     if (this.stackId && StickyNote.stacks[this.stackId]) {
-      console.log(`[Entropy] Removing ${this.data.id} from stack ${this.stackId}`);
+      debugLog(`Removing ${this.data.id} from stack ${this.stackId}`);
       const stack = StickyNote.stacks[this.stackId];
       const noteIndex = stack.indexOf(this.data.id);
       if (noteIndex > -1) {
@@ -274,7 +365,7 @@ class StickyNote {
           const stackKey = `entropy_${chatId}_stack_${this.stackId}`;
           const stackPositionKey = `entropy_${chatId}_stack_position_${this.stackId}`;
           chrome.storage.local.remove([stackKey, stackPositionKey]);
-          console.log(`[Entropy] Removed empty stack ${this.stackId}`);
+          debugLog(`Removed empty stack ${this.stackId}`);
         } else if (stack.length === 1) {
           // Only one note left, remove it from stack
           const remainingNote = StickyNote.allNotes.find(n => n.data.id === stack[0]);
@@ -289,7 +380,7 @@ class StickyNote {
           const stackKey = `entropy_${chatId}_stack_${this.stackId}`;
           const stackPositionKey = `entropy_${chatId}_stack_position_${this.stackId}`;
           chrome.storage.local.remove([stackKey, stackPositionKey]);
-          console.log(`[Entropy] Unstacked last remaining note in ${this.stackId}`);
+          debugLog(`Unstacked last remaining note in ${this.stackId}`);
         } else {
           // Update remaining notes in stack
           StickyNote.stacks[this.stackId] = stack;
@@ -306,7 +397,7 @@ class StickyNote {
           
           // Show the top note of the remaining stack
           this.showOnlyTopOfStack(this.stackId);
-          console.log(`[Entropy] Updated stack ${this.stackId} with ${stack.length} remaining notes`);
+          debugLog(`Updated stack ${this.stackId} with ${stack.length} remaining notes`);
         }
       }
     }
@@ -314,113 +405,55 @@ class StickyNote {
     // Remove from DOM
     if (this.element) {
       this.element.remove();
-      console.log(`[Entropy] Removed sticky ${this.data.id} from DOM`);
+      debugLog(`Removed sticky ${this.data.id} from DOM`);
     }
     
     // Remove from allNotes array
     const noteIndex = StickyNote.allNotes.findIndex(n => n.data.id === this.data.id);
     if (noteIndex > -1) {
       StickyNote.allNotes.splice(noteIndex, 1);
-      console.log(`[Entropy] Removed sticky ${this.data.id} from memory (${StickyNote.allNotes.length} remaining)`);
+      debugLog(`Removed sticky ${this.data.id} from memory`);
     }
     
-    // AGGRESSIVE STORAGE REMOVAL - Remove from both chat index AND storage, then verify
-    console.log(`[Entropy] Starting aggressive removal of ${this.data.id}`);
-    console.log(`[Entropy] Removing from storage key: ${stickyStorageKey}`);
-    console.log(`[Entropy] Removing from chat index: ${chatK}`);
-    
-    // Step 1: Remove from chat index first
+    // Simplified storage removal - just delete it completely
     chrome.storage.local.get([chatK], (chatResult) => {
       const currentIndex = chatResult[chatK] || [];
       const newIndex = currentIndex.filter(id => id !== this.data.id);
-      console.log(`[Entropy] Chat index before: [${currentIndex.join(', ')}]`);
-      console.log(`[Entropy] Chat index after: [${newIndex.join(', ')}]`);
       
-      chrome.storage.local.set({ [chatK]: newIndex }, () => {
-        console.log(`[Entropy] ✅ Updated chat index`);
-        
-        // Step 2: Remove the sticky data itself
+      // Force immediate removal from both index and storage
+      const updates = {};
+      updates[chatK] = newIndex;
+      
+      chrome.storage.local.set(updates, () => {
+        // Explicitly remove the storage key
         chrome.storage.local.remove([stickyStorageKey], () => {
-          console.log(`[Entropy] ✅ Attempted sticky removal from ${stickyStorageKey}`);
-          
-          // Step 3: VERIFY the removal actually worked
-          setTimeout(() => {
-            chrome.storage.local.get([stickyStorageKey, chatK], (verifyResult) => {
-              const stickyStillExists = !!verifyResult[stickyStorageKey];
-              const newChatIndex = verifyResult[chatK] || [];
-              const stillInIndex = newChatIndex.includes(this.data.id);
-              
-              console.log(`[Entropy] 🔍 DELETION VERIFICATION:`);
-              console.log(`[Entropy] - Sticky still in storage: ${stickyStillExists}`);
-              console.log(`[Entropy] - Still in chat index: ${stillInIndex}`);
-              console.log(`[Entropy] - Current chat index: [${newChatIndex.join(', ')}]`);
-              
-              if (stickyStillExists || stillInIndex) {
-                console.log(`[Entropy] ⚠️ DELETION FAILED! Attempting aggressive cleanup...`);
-                
-                // Nuclear option: manually clean up
-                const updates = {};
-                if (stickyStillExists) {
-                  updates[stickyStorageKey] = null; // Explicitly set to null
-                }
-                if (stillInIndex) {
-                  // Force remove from chat index
-                  const cleanedIndex = newChatIndex.filter(id => id !== this.data.id);
-                  updates[chatK] = cleanedIndex;
-                  console.log(`[Entropy] Forcing chat index cleanup: [${newChatIndex.join(', ')}] → [${cleanedIndex.join(', ')}]`);
-                }
-                
-                chrome.storage.local.set(updates, () => {
-                  console.log(`[Entropy] 💥 Applied nuclear cleanup`);
-                  
-                  // Final verification
-                  setTimeout(() => {
-                    chrome.storage.local.get([stickyStorageKey, chatK], (finalResult) => {
-                      const finalStickyExists = !!finalResult[stickyStorageKey];
-                      const finalIndex = finalResult[chatK] || [];
-                      const finalStillInIndex = finalIndex.includes(this.data.id);
-                      
-                      console.log(`[Entropy] 🔍 FINAL VERIFICATION:`);
-                      console.log(`[Entropy] - Sticky exists: ${finalStickyExists}`);
-                      console.log(`[Entropy] - In index: ${finalStillInIndex}`);
-                      console.log(`[Entropy] - Final index: [${finalIndex.join(', ')}]`);
-                      
-                      if (!finalStickyExists && !finalStillInIndex) {
-                        console.log(`[Entropy] ✅ DELETION SUCCESSFUL!`);
-                      } else {
-                        console.log(`[Entropy] ❌ DELETION STILL FAILED!`);
-                      }
-                      
-                      verifyStorageState("deletion");
-                    });
-                  }, 200);
-                });
-              } else {
-                console.log(`[Entropy] ✅ DELETION SUCCESSFUL!`);
-                verifyStorageState("deletion");
-              }
-            });
-          }, 100);
+          debugLog(`Successfully removed sticky ${this.data.id} from storage and index`);
         });
       });
     });
   }
 
   minimize() {
-    const chatHistory = this.element.querySelector('.chat-history');
-    const chatInput = this.element.querySelector('.chat-input');
-    const minBtn = this.element.querySelector('.minimize-btn');
-    chatHistory.style.display = 'none';
-    chatInput.style.display = 'none';
-    minBtn.textContent = '+';
+    this.isMinimized = true;
+    this.data.content.isMinimized = true;
+    this.element.querySelector('.chat-history').style.display = 'none';
+    this.element.querySelector('.chat-input').style.display = 'none';
+    this.element.querySelector('.minimize-btn').textContent = '+';
+    
+    // Set a fixed small height when minimized
+    this.element.style.height = 'auto';
+    this.autoSave();
   }
   restore() {
-    const chatHistory = this.element.querySelector('.chat-history');
-    const chatInput = this.element.querySelector('.chat-input');
-    const minBtn = this.element.querySelector('.minimize-btn');
-    chatHistory.style.display = 'block';
-    chatInput.style.display = 'flex';
-    minBtn.textContent = '—';
+    this.isMinimized = false;
+    this.data.content.isMinimized = false;
+    this.element.querySelector('.chat-history').style.display = '';
+    this.element.querySelector('.chat-input').style.display = 'flex';
+    this.element.querySelector('.minimize-btn').textContent = '—';
+    
+    // Adjust layout after restoring
+    setTimeout(() => this.adjustLayout(), 50);
+    this.autoSave();
   }
 
   initEvents() {
@@ -434,7 +467,10 @@ class StickyNote {
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || 
           e.target.classList.contains('send-btn') || e.target.classList.contains('color-option') ||
           e.target.classList.contains('close-btn') || e.target.classList.contains('minimize-btn') ||
-          e.target.classList.contains('stack-left') || e.target.classList.contains('stack-right')) {
+          e.target.classList.contains('export-btn') || e.target.closest('.export-dropdown') ||
+          e.target.classList.contains('stack-left') || e.target.classList.contains('stack-right') ||
+          e.target.classList.contains('theme-circle') || e.target.closest('.theme-circle') ||
+          e.target.closest('.color-picker') || e.target.closest('.theme-preview')) {
         return;
       }
       e.preventDefault();
@@ -465,6 +501,7 @@ class StickyNote {
     let resizing = false, startW, startH, startX, startY;
     handle.addEventListener('mousedown', (e) => {
       resizing = true;
+      this._isResizing = true; // Track resize state
       startW = box.offsetWidth;
       startH = box.offsetHeight;
       startX = e.clientX;
@@ -474,21 +511,33 @@ class StickyNote {
     });
     document.addEventListener('mousemove', (e) => {
       if (!resizing) return;
-      const newWidth = Math.max(200, startW + (e.clientX - startX));
+      const newWidth = Math.max(160, startW + (e.clientX - startX));
       const newHeight = Math.max(100, startH + (e.clientY - startY));
       box.style.width = newWidth + 'px';
       box.style.height = newHeight + 'px';
-      this.adjustLayout();
+      
+      // Manually adjust chat history height during resize
+      const chatHistory = box.querySelector('.chat-history');
+      const header = box.querySelector('.header');
+      const chatInput = box.querySelector('.chat-input');
+      if (chatHistory && header && chatInput) {
+        const headerHeight = header.offsetHeight;
+        const chatInputHeight = chatInput.offsetHeight;
+        const availableHeight = newHeight - headerHeight - chatInputHeight - 16;
+        chatHistory.style.height = Math.max(availableHeight, 30) + 'px';
+      }
+      
       this.autoSave();
     });
     document.addEventListener('mouseup', () => {
       if (resizing) {
         resizing = false;
+        this._isResizing = false; // Clear resize state
         this.save();
       }
     });
 
-    // Close/minimize
+    // Close/minimize/export
     box.querySelector('.close-btn').onclick = () => this.remove();
     const minBtn = box.querySelector('.minimize-btn');
     minBtn.onclick = () => {
@@ -496,6 +545,22 @@ class StickyNote {
       else this.restore();
       this.autoSave();
     };
+    
+    // Export button setup - COMMENTED OUT (not functional yet)
+    // const exportBtn = box.querySelector('.export-btn');
+    // if (exportBtn) {
+    //   exportBtn.onclick = (e) => {
+    //     console.log('Export button clicked via onclick!');
+    //     e.preventDefault();
+    //     e.stopPropagation();
+    //     const exportDropdown = this.element.querySelector('.export-dropdown');
+    //     if (exportDropdown) {
+    //       const isVisible = exportDropdown.style.display !== 'none';
+    //       exportDropdown.style.display = isVisible ? 'none' : 'block';
+    //       console.log('Dropdown display set to:', exportDropdown.style.display);
+    //     }
+    //   };
+    // }
 
     // Chat logic with API integration
     const chatInput = box.querySelector('.chat-message-input');
@@ -505,13 +570,7 @@ class StickyNote {
       const question = chatInput.value.trim();
       if (!question) return;
       
-      // Debug: Log what we're sending with more details
-      console.log('[Entropy] Sending message:');
-      console.log('Chat input element:', chatInput);
-      console.log('Chat input value:', chatInput.value);
-      console.log('Context:', this.data.content.context);
-      console.log('Question:', question);
-      console.log('Are they the same?', this.data.content.context === question);
+      debugLog('Sending message:', question);
       
       this.addMessage('user', question);
       this.addMessage('bot', '🤖 Thinking...');
@@ -526,10 +585,10 @@ class StickyNote {
           question: question
         };
         
-        console.log('[Entropy] Sending to background:', messageData);
+        debugLog('Sending to background:', messageData);
         
         chrome.runtime.sendMessage(messageData, (response) => {
-          console.log('[Entropy] Received response:', response);
+          debugLog('Received response:', response);
           // Find and update the last bot message
           const botMessages = this.element.querySelectorAll('.bot-msg');
           const lastBotMessage = botMessages[botMessages.length - 1];
@@ -670,11 +729,7 @@ class StickyNote {
     const chatId = getCurrentChatId();
     const stackPositionKey = `entropy_${chatId}_stack_position_${stackId}`;
     chrome.storage.local.set({ 
-      [stackPositionKey]: {
-        position: topPosition,
-        stackId: stackId,
-        lastUpdated: Date.now()
-      }
+      [stackPositionKey]: topPosition
     });
   }
 
@@ -751,57 +806,60 @@ class StickyNote {
     if (!this.stackId) return;
     const stack = StickyNote.stacks[this.stackId];
     if (!stack || stack.length < 2) return;
+
+    // Get the current stack anchor position from storage
+    const chatId = getCurrentChatId();
+    const stackPositionKey = `entropy_${chatId}_stack_position_${this.stackId}`;
     
-    // Get the current stack position (should be the same for all notes in stack)
-    const currentTopNote = StickyNote.allNotes.find(n => n.data.id === stack[stack.length - 1]);
-    let stackPosition = null;
-    if (currentTopNote && currentTopNote.element) {
-      stackPosition = {
-        top: currentTopNote.element.style.top,
-        left: currentTopNote.element.style.left,
-        width: currentTopNote.element.style.width,
-        height: currentTopNote.element.style.height
-      };
-    }
-    
-    // Cycle through stack
-    if (direction === 1) {
-      stack.push(stack.shift());
-    } else {
-      stack.unshift(stack.pop());
-    }
-    
-    StickyNote.stacks[this.stackId] = stack;
-    this.saveStackToStorage(this.stackId);
-    
-    // Apply stack position to all notes and show only the new top
-    stack.forEach((id, idx) => {
-      const note = StickyNote.allNotes.find(n => n.data.id === id);
-      if (note && note.element) {
-        // Apply stack position to all notes
-        if (stackPosition) {
+    chrome.storage.local.get([stackPositionKey], (result) => {
+      let stackPosition = result[stackPositionKey];
+      
+      // If no stored position, use current top note position as anchor
+      if (!stackPosition) {
+        const currentTopNote = StickyNote.allNotes.find(n => n.data.id === stack[stack.length - 1]);
+        if (currentTopNote && currentTopNote.element) {
+          stackPosition = {
+            top: currentTopNote.element.style.top,
+            left: currentTopNote.element.style.left,
+            width: currentTopNote.element.style.width,
+            height: currentTopNote.element.style.height
+          };
+          // Save this as the anchor position
+          chrome.storage.local.set({ [stackPositionKey]: stackPosition });
+        }
+      }
+
+      // Cycle through stack
+      if (direction === 1) {
+        stack.push(stack.shift());
+      } else {
+        stack.unshift(stack.pop());
+      }
+
+      StickyNote.stacks[this.stackId] = stack;
+      this.saveStackToStorage(this.stackId);
+
+      // Apply the consistent stack position to all notes
+      stack.forEach((id, idx) => {
+        const note = StickyNote.allNotes.find(n => n.data.id === id);
+        if (note && note.element && stackPosition) {
+          // Use the consistent stack anchor position
           note.element.style.top = stackPosition.top;
           note.element.style.left = stackPosition.left;
           note.element.style.width = stackPosition.width;
           note.element.style.height = stackPosition.height;
-          
-          // Update the stored data to maintain stack position
           note.data.position = { top: stackPosition.top, left: stackPosition.left };
           note.data.dimensions = { width: stackPosition.width, height: stackPosition.height };
+          
+          // Show only the top note
+          note.element.style.display = (idx === stack.length - 1) ? 'block' : 'none';
+          note.updateStackUI();
+          if (idx === stack.length - 1) {
+            note.bringToFront();
+          }
+          note.save();
         }
-        
-        // Show only the top note
-        note.element.style.display = (idx === stack.length - 1) ? 'block' : 'none';
-        note.updateStackUI();
-        
-        // Bring top of stack to front
-        if (idx === stack.length - 1) {
-          note.bringToFront();
-        }
-        
-        // Save the updated position
-        note.save();
-      }
+      });
     });
   }
 
@@ -812,18 +870,129 @@ class StickyNote {
     div.textContent = (role === 'user' ? 'You: ' : '🤖: ') + content;
     chatHistory.appendChild(div);
     chatHistory.scrollTop = chatHistory.scrollHeight;
+    
+    // Adjust layout to fit new content
+    this.adjustLayout();
     this.autoSave();
   }
 
   initializeColorPicker() {
     const colorPicker = this.element.querySelector('.color-picker');
-    const colorOptions = colorPicker.querySelectorAll('.color-option');
-    colorOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        this.color = option.getAttribute('data-color');
-        this.element.style.background = this.color;
-        this.autoSave();
+    const themeCircles = colorPicker.querySelectorAll('.theme-circle');
+    const colorOptions = colorPicker.querySelector('.color-options');
+    const transparentOption = colorPicker.querySelector('.transparent-option');
+    
+    // Define color themes
+    const themes = {
+      pastel: [
+        'rgba(255, 182, 193, 0.8)', // Light Pink
+        'rgba(221, 160, 221, 0.8)', // Plum
+        'rgba(173, 216, 230, 0.8)', // Light Blue
+        'rgba(255, 218, 185, 0.8)', // Peach
+        'rgba(152, 251, 152, 0.8)', // Pale Green
+        'rgba(230, 230, 250, 0.8)'  // Lavender
+      ],
+      warm: [
+        'rgba(255, 99, 71, 0.8)',   // Tomato
+        'rgba(255, 165, 0, 0.8)',   // Orange
+        'rgba(255, 215, 0, 0.8)',   // Gold
+        'rgba(255, 69, 0, 0.8)',    // Red Orange
+        'rgba(255, 140, 0, 0.8)',   // Dark Orange
+        'rgba(220, 20, 60, 0.8)'    // Crimson
+      ],
+      cold: [
+        'rgba(70, 130, 180, 0.8)',  // Steel Blue
+        'rgba(32, 178, 170, 0.8)',  // Light Sea Green
+        'rgba(72, 209, 204, 0.8)',  // Medium Turquoise
+        'rgba(0, 191, 255, 0.8)',   // Deep Sky Blue
+        'rgba(64, 224, 208, 0.8)',  // Turquoise
+        'rgba(95, 158, 160, 0.8)'   // Cadet Blue
+      ],
+      vintage: [
+        'rgba(139, 69, 19, 0.8)',   // Saddle Brown
+        'rgba(160, 82, 45, 0.8)',   // Sienna
+        'rgba(188, 143, 143, 0.8)', // Rosy Brown
+        'rgba(205, 133, 63, 0.8)',  // Peru
+        'rgba(210, 180, 140, 0.8)', // Tan
+        'rgba(222, 184, 135, 0.8)'  // Burlywood
+      ]
+    };
+    
+    let currentActiveTheme = null;
+    
+    // Handle theme circle clicks
+    themeCircles.forEach(circle => {
+      circle.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const theme = circle.getAttribute('data-theme');
+        
+        if (currentActiveTheme === theme) {
+          // Collapse if same theme clicked
+          colorOptions.classList.remove('expanded');
+          circle.classList.remove('active');
+          currentActiveTheme = null;
+        } else {
+          // Expand new theme
+          themeCircles.forEach(c => c.classList.remove('active'));
+          circle.classList.add('active');
+          currentActiveTheme = theme;
+          
+          // Populate color options
+          colorOptions.innerHTML = '';
+          themes[theme].forEach(color => {
+            const option = document.createElement('div');
+            option.className = 'color-option';
+            option.setAttribute('data-color', color);
+            option.style.background = color;
+            option.addEventListener('click', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              this.color = color;
+              this.element.style.background = color;
+              this.autoSave();
+              // Collapse after selection
+              colorOptions.classList.remove('expanded');
+              circle.classList.remove('active');
+              currentActiveTheme = null;
+            });
+            colorOptions.appendChild(option);
+          });
+          
+          colorOptions.classList.add('expanded');
+        }
       });
+      
+      // Add hover tooltip
+      circle.addEventListener('mouseenter', () => {
+        const theme = circle.getAttribute('data-theme');
+        circle.title = theme.charAt(0).toUpperCase() + theme.slice(1);
+      });
+    });
+
+    // Handle transparent option
+    transparentOption.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.color = 'transparent';
+      this.element.style.background = 'transparent';
+      this.autoSave();
+      // Collapse any open theme
+      if (currentActiveTheme) {
+        colorOptions.classList.remove('expanded');
+        themeCircles.forEach(c => c.classList.remove('active'));
+        currentActiveTheme = null;
+      }
+    });
+    
+    // Close expanded theme when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!colorPicker.contains(e.target) && currentActiveTheme) {
+        colorOptions.classList.remove('expanded');
+        themeCircles.forEach(c => c.classList.remove('active'));
+        currentActiveTheme = null;
+      }
     });
   }
 
@@ -848,20 +1017,307 @@ class StickyNote {
     }
   }
 
-  adjustLayout() {
-    const chatHistory = this.element.querySelector('.chat-history');
-    if (!chatHistory) return;
+  initializeExportFeatures() {
+    const exportDropdown = this.element.querySelector('.export-dropdown');
+    const exportOptions = this.element.querySelectorAll('.export-option');
     
-    const historyContent = chatHistory.scrollHeight;
+    console.log('Export elements found:', {
+      exportDropdown: !!exportDropdown,
+      exportOptionsCount: exportOptions.length
+    });
     
-    if (historyContent < 200) {
-      chatHistory.style.height = historyContent + 'px';
-    } else {
-      chatHistory.style.height = '200px';
+    if (!exportDropdown) {
+      console.error('Export dropdown not found!');
+      return;
     }
     
-    // Ensure chat history scrolls to bottom
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+    // Handle export option clicks
+    exportOptions.forEach(option => {
+      option.addEventListener('click', (e) => {
+        console.log('Export option clicked:', option.getAttribute('data-export'));
+        e.preventDefault();
+        e.stopPropagation();
+        const exportType = option.getAttribute('data-export');
+        this.handleExport(exportType);
+        exportDropdown.style.display = 'none';
+      });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      const exportBtn = this.element.querySelector('.export-btn');
+      if (exportBtn && !exportBtn.contains(e.target) && !exportDropdown.contains(e.target)) {
+        exportDropdown.style.display = 'none';
+      }
+    });
+  }
+  
+  handleExport(type) {
+    const exportData = this.generateExportData();
+    
+    switch (type) {
+      case 'notion':
+        this.exportToNotion(exportData);
+        break;
+      case 'markdown':
+        this.exportToMarkdown(exportData);
+        break;
+      case 'json':
+        this.exportToJSON(exportData);
+        break;
+      case 'email':
+        this.exportToEmail(exportData);
+        break;
+      case 'clipboard':
+        this.exportToClipboard(exportData);
+        break;
+      default:
+        console.log('Unknown export type:', type);
+    }
+  }
+  
+  generateExportData() {
+    const chatHistory = this.element.querySelector('.chat-history');
+    const messages = [];
+    
+    Array.from(chatHistory.children).forEach(msgDiv => {
+      const isUser = msgDiv.className === 'user-msg';
+      const content = msgDiv.textContent.replace(/^You: |^🤖: /, '');
+      messages.push({
+        role: isUser ? 'user' : 'assistant',
+        content: content,
+        timestamp: new Date().toISOString()
+      });
+    });
+    
+    return {
+      title: this.title,
+      context: this.data.content.context,
+      messages: messages,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      chatId: getCurrentChatId()
+    };
+  }
+  
+  async exportToNotion(data) {
+    // For Notion integration, we'll create a formatted text that users can paste
+    // In a real implementation, you'd use Notion's API with proper authentication
+    const notionContent = this.formatForNotion(data);
+    
+    try {
+      await navigator.clipboard.writeText(notionContent);
+      this.showExportSuccess('Notion-formatted content copied to clipboard! Paste it into your Notion page.');
+    } catch (err) {
+      this.showExportError('Failed to copy to clipboard. Please try again.');
+    }
+  }
+  
+  formatForNotion(data) {
+    let content = `# ${data.title}\n\n`;
+    content += `**Context:** ${data.context}\n\n`;
+    content += `**Source:** ${data.url}\n\n`;
+    content += `**Date:** ${new Date(data.timestamp).toLocaleDateString()}\n\n`;
+    
+    if (data.messages.length > 0) {
+      content += `## Conversation\n\n`;
+      data.messages.forEach(msg => {
+        const role = msg.role === 'user' ? '👤 **You**' : '🤖 **Assistant**';
+        content += `${role}: ${msg.content}\n\n`;
+      });
+    }
+    
+    content += `---\n*Exported from Entropy Sticky Notes*`;
+    return content;
+  }
+  
+  async exportToMarkdown(data) {
+    const markdown = this.formatAsMarkdown(data);
+    try {
+      await navigator.clipboard.writeText(markdown);
+      this.showExportSuccess('Markdown copied to clipboard!');
+    } catch (err) {
+      this.showExportError('Failed to copy markdown. Please try again.');
+    }
+  }
+  
+  formatAsMarkdown(data) {
+    let md = `# ${data.title}\n\n`;
+    md += `**Context:** ${data.context}\n\n`;
+    md += `**Source:** [ChatGPT Conversation](${data.url})\n\n`;
+    md += `**Date:** ${new Date(data.timestamp).toLocaleDateString()}\n\n`;
+    
+    if (data.messages.length > 0) {
+      md += `## Messages\n\n`;
+      data.messages.forEach((msg, index) => {
+        md += `### ${msg.role === 'user' ? 'User' : 'Assistant'} (${index + 1})\n\n`;
+        md += `${msg.content}\n\n`;
+      });
+    }
+    
+    return md;
+  }
+  
+  async exportToJSON(data) {
+    const jsonString = JSON.stringify(data, null, 2);
+    try {
+      await navigator.clipboard.writeText(jsonString);
+      this.showExportSuccess('JSON data copied to clipboard!');
+    } catch (err) {
+      this.showExportError('Failed to copy JSON. Please try again.');
+    }
+  }
+  
+  exportToEmail(data) {
+    const subject = encodeURIComponent(`ChatGPT Conversation: ${data.title}`);
+    const body = encodeURIComponent(this.formatForEmail(data));
+    const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+    
+    try {
+      window.open(mailtoLink, '_blank');
+      this.showExportSuccess('Email client opened with conversation data!');
+    } catch (err) {
+      this.showExportError('Failed to open email client. Please try copying the content instead.');
+    }
+  }
+  
+  formatForEmail(data) {
+    let content = `ChatGPT Conversation: ${data.title}\n\n`;
+    content += `Context: ${data.context}\n\n`;
+    content += `Source: ${data.url}\n\n`;
+    content += `Date: ${new Date(data.timestamp).toLocaleDateString()}\n\n`;
+    
+    if (data.messages.length > 0) {
+      content += `Conversation:\n\n`;
+      data.messages.forEach(msg => {
+        const role = msg.role === 'user' ? 'You' : 'Assistant';
+        content += `${role}: ${msg.content}\n\n`;
+      });
+    }
+    
+    content += `\nExported from Entropy Sticky Notes`;
+    return content;
+  }
+  
+  async exportToClipboard(data) {
+    const textContent = this.formatAsPlainText(data);
+    try {
+      await navigator.clipboard.writeText(textContent);
+      this.showExportSuccess('Content copied to clipboard!');
+    } catch (err) {
+      this.showExportError('Failed to copy to clipboard. Please try again.');
+    }
+  }
+  
+  formatAsPlainText(data) {
+    let text = `${data.title}\n\n`;
+    text += `Context: ${data.context}\n\n`;
+    text += `Source: ${data.url}\n\n`;
+    text += `Date: ${new Date(data.timestamp).toLocaleDateString()}\n\n`;
+    
+    if (data.messages.length > 0) {
+      text += `Messages:\n\n`;
+      data.messages.forEach(msg => {
+        const role = msg.role === 'user' ? 'You' : 'Assistant';
+        text += `${role}: ${msg.content}\n\n`;
+      });
+    }
+    
+    return text;
+  }
+  
+  showExportSuccess(message) {
+    this.showExportNotification(message, 'success');
+  }
+  
+  showExportError(message) {
+    this.showExportNotification(message, 'error');
+  }
+  
+  showExportNotification(message, type) {
+    // Create a temporary notification
+    const notification = document.createElement('div');
+    notification.className = `export-notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'success' ? '#4CAF50' : '#f44336'};
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      font-size: 14px;
+      max-width: 300px;
+      animation: slideIn 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 3000);
+  }
+
+  adjustLayout() {
+    const chatHistory = this.element.querySelector('.chat-history');
+    const header = this.element.querySelector('.header');
+    const chatInput = this.element.querySelector('.chat-input');
+    
+    if (!chatHistory || !header) return;
+    
+    // Don't auto-adjust if user is manually resizing
+    if (this._isResizing) return;
+    
+    // Wait for DOM to be fully rendered before calculating dimensions
+    requestAnimationFrame(() => {
+      // Calculate actual required dimensions
+      const headerHeight = header.offsetHeight;
+      const chatInputHeight = chatInput ? chatInput.offsetHeight : 0;
+      
+      // Get current dimensions
+      const currentWidth = parseInt(this.element.style.width) || 420;
+      const currentHeight = parseInt(this.element.style.height) || 320;
+      
+      // Calculate minimum height needed including proper spacing
+      const minRequiredHeight = headerHeight + chatInputHeight + 80; // 80px for compact chat area
+      
+      // Ensure minimum width for proper display
+      const minRequiredWidth = 380; // Minimum width for UI elements to prevent crowding
+      
+      // Adjust dimensions if needed
+      if (currentHeight < minRequiredHeight) {
+        this.element.style.height = minRequiredHeight + 'px';
+      }
+      
+      if (currentWidth < minRequiredWidth) {
+        this.element.style.width = minRequiredWidth + 'px';
+      }
+      
+      // Set chat history to use available space efficiently
+      const finalHeight = parseInt(this.element.style.height);
+      const availableHeight = finalHeight - headerHeight - chatInputHeight - 16; // 16px padding
+      chatHistory.style.height = Math.max(availableHeight, 60) + 'px'; // Minimum 60px for compact chat area
+      
+      // Always enable scrolling for compact design
+      chatHistory.style.overflowY = 'auto';
+      if (chatHistory.children.length > 0) {
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+      }
+      
+      // Update stored dimensions
+      this.data.dimensions.height = this.element.style.height;
+      this.data.dimensions.width = this.element.style.width;
+      this.autoSave();
+    });
   }
 
   bringToFront() {
@@ -969,60 +1425,20 @@ async function saveSticky(stickyData) {
 
 // Debug function to see what's stored for current chat
 async function debugStorageForCurrentChat() {
+  if (!DEBUG_MODE) return;
+  
   const currentChatId = getCurrentChatId();
-  console.log(`[Entropy DEBUG] === STORAGE DEBUG FOR CHAT ${currentChatId} ===`);
+  debugLog(`Storage debug for chat ${currentChatId}`);
   
   chrome.storage.local.get(null, (data) => {
-    console.log(`[Entropy DEBUG] Total storage keys: ${Object.keys(data).length}`);
-    
-    // Show all chat indices
     const chatKeys = Object.keys(data).filter(key => key.startsWith('entropy_chat_'));
-    console.log(`[Entropy DEBUG] Found ${chatKeys.length} chat indices:`);
-    chatKeys.forEach(chatKey => {
-      const chatId = chatKey.replace('entropy_chat_', '');
-      const stickyIds = data[chatKey] || [];
-      console.log(`[Entropy DEBUG] - Chat ${chatId}: ${stickyIds.length} stickies [${stickyIds.join(', ')}]`);
-    });
-    
-    // Show all actual sticky keys
     const stickyKeys = Object.keys(data).filter(key => key.startsWith('entropy_sticky_'));
-    console.log(`[Entropy DEBUG] Found ${stickyKeys.length} actual sticky keys:`);
     
-    // Group by chat ID
-    const stickyByChatId = {};
-    stickyKeys.forEach(stickyKey => {
-      const parts = stickyKey.split('_');
-      if (parts.length >= 4) {
-        const chatId = parts[2];
-        const stickyId = parts.slice(3).join('_');
-        if (!stickyByChatId[chatId]) stickyByChatId[chatId] = [];
-        stickyByChatId[chatId].push(stickyId);
-      }
-    });
+    debugLog(`Total chats: ${chatKeys.length}, Total stickies: ${stickyKeys.length}`);
     
-    Object.keys(stickyByChatId).forEach(chatId => {
-      const isCurrentChat = chatId === currentChatId;
-      console.log(`[Entropy DEBUG] - ${isCurrentChat ? '*** CURRENT *** ' : ''}Chat ${chatId}: ${stickyByChatId[chatId].length} actual stickies [${stickyByChatId[chatId].join(', ')}]`);
-    });
-    
-    // Show current chat details
     const currentChatKey = `entropy_chat_${currentChatId}`;
     const currentChatIndex = data[currentChatKey] || [];
-    const currentChatActualStickies = stickyByChatId[currentChatId] || [];
-    
-    console.log(`[Entropy DEBUG] === CURRENT CHAT ANALYSIS ===`);
-    console.log(`[Entropy DEBUG] Chat index says: ${currentChatIndex.length} stickies [${currentChatIndex.join(', ')}]`);
-    console.log(`[Entropy DEBUG] Actually stored: ${currentChatActualStickies.length} stickies [${currentChatActualStickies.join(', ')}]`);
-    
-    // Check for mismatches
-    const indexMismatch = JSON.stringify(currentChatIndex.sort()) !== JSON.stringify(currentChatActualStickies.sort());
-    if (indexMismatch) {
-      console.log(`[Entropy DEBUG] ⚠️  MISMATCH DETECTED! Chat index is corrupted.`);
-      console.log(`[Entropy DEBUG] Index has: [${currentChatIndex.join(', ')}]`);
-      console.log(`[Entropy DEBUG] Storage has: [${currentChatActualStickies.join(', ')}]`);
-    } else {
-      console.log(`[Entropy DEBUG] ✅ Chat index matches actual storage`);
-    }
+    debugLog(`Current chat index: [${currentChatIndex.join(', ')}]`);
   });
 }
 
@@ -1200,7 +1616,8 @@ async function verifyStorageState(operation = "unknown") {
 // Only load stickies for the *current* chat
 async function loadStickiesForPage() {
   const currentChatId = getCurrentChatId();
-  console.log(`[Entropy] === LOADING STICKIES FOR CHAT ${currentChatId} ===`);
+  const currentUrl = window.location.href;
+  debugLog(`Loading stickies for chat ${currentChatId}, URL: ${currentUrl}`);
   
   // First purge any ghost stickies
   await purgeGhostStickies();
@@ -1209,74 +1626,71 @@ async function loadStickiesForPage() {
   chrome.storage.local.get(null, async (allData) => {
     // Find ALL sticky keys that actually belong to the current chat
     const currentChatStickyPattern = `entropy_sticky_${currentChatId}_`;
-    console.log(`[Entropy] Looking for stickies with pattern: ${currentChatStickyPattern}`);
-    
     const actualCurrentChatStickyKeys = Object.keys(allData)
       .filter(key => key.startsWith(currentChatStickyPattern));
     
-    console.log(`[Entropy] Found ${actualCurrentChatStickyKeys.length} actual sticky keys for current chat:`, actualCurrentChatStickyKeys);
+    debugLog(`Found ${actualCurrentChatStickyKeys.length} stickies for current chat`);
     
     // Extract the sticky IDs
     const actualStickyIds = actualCurrentChatStickyKeys.map(key => 
       key.replace(currentChatStickyPattern, '')
     );
     
-    console.log(`[Entropy] Extracted sticky IDs:`, actualStickyIds);
-    
-    // Load ONLY these legitimate stickies
+    // Load ONLY these legitimate stickies that have valid data
     const loadedStickyIds = [];
     
     for (const stickyId of actualStickyIds) {
       const stickyKey = `entropy_sticky_${currentChatId}_${stickyId}`;
       const stickyData = allData[stickyKey];
       
-      if (stickyData) {
-        console.log(`[Entropy] ✅ Loading legitimate sticky ${stickyId} for chat ${currentChatId}`);
+      // Only load if the sticky data exists and is valid
+      if (stickyData && stickyData.id === stickyId && stickyData.content) {
+        debugLog(`Loading sticky ${stickyId}`);
         const note = new StickyNote(stickyData);
         note.create();
         loadedStickyIds.push(stickyId);
       } else {
-        console.log(`[Entropy] ❌ Sticky data missing for ${stickyId}`);
+        debugLog(`Skipping invalid or missing sticky ${stickyId}`);
       }
+    }
+    
+    // Clean up any invalid storage entries that didn't load
+    const keysToRemove = actualCurrentChatStickyKeys.filter(key => {
+      const stickyId = key.replace(currentChatStickyPattern, '');
+      return !loadedStickyIds.includes(stickyId);
+    });
+    
+    if (keysToRemove.length > 0) {
+      debugLog(`Cleaning up ${keysToRemove.length} invalid sticky entries`);
+      chrome.storage.local.remove(keysToRemove);
     }
     
     // Completely replace the corrupted chat index with the clean one
     const chatK = chatKey();
-    console.log(`[Entropy] 🧹 Replacing corrupted chat index ${chatK}`);
-    console.log(`[Entropy] Old corrupted index: ${JSON.stringify(allData[chatK] || [])}`);
-    console.log(`[Entropy] New clean index: ${JSON.stringify(loadedStickyIds)}`);
-    
     chrome.storage.local.set({ [chatK]: loadedStickyIds });
     
-    console.log(`[Entropy] ✅ Successfully loaded ${loadedStickyIds.length} legitimate stickies for chat ${currentChatId}`);
+    log(`Loaded ${loadedStickyIds.length} stickies for current chat`);
     
     // Restore stacks after all notes are loaded
     setTimeout(() => {
-      console.log(`[Entropy] Starting stack restoration for chat ${currentChatId}...`);
+      debugLog(`Starting stack restoration for chat ${currentChatId}`);
       StickyNote.restoreStacksFromStorage();
     }, 200);
   });
 }
 
 function removeAllStickiesFromDOM() {
-  console.log(`[Entropy] Removing all stickies from DOM and clearing memory`);
+  debugLog(`Removing all stickies from DOM and clearing memory`);
   
   // Remove all DOM elements
   const stickyElements = document.querySelectorAll('.gpt-response');
-  console.log(`[Entropy] Found ${stickyElements.length} sticky elements to remove`);
-  stickyElements.forEach(el => {
-    console.log(`[Entropy] Removing sticky element with ID: ${el.dataset.entropyId}`);
-    el.remove();
-  });
+  stickyElements.forEach(el => el.remove());
   
   // Clear all in-memory data structures
-  console.log(`[Entropy] Clearing ${StickyNote.allNotes.length} notes from memory`);
   StickyNote.allNotes = [];
-  
-  console.log(`[Entropy] Clearing ${Object.keys(StickyNote.stacks).length} stacks from memory`);
   StickyNote.stacks = {};
   
-  console.log(`[Entropy] DOM and memory cleanup complete`);
+  debugLog(`DOM and memory cleanup complete`);
 }
 
 // ========== Create new sticky from selection ==========
@@ -1319,8 +1733,8 @@ function createStickyFromSelection(text, rect, range) {
       top: relTopPx + 'px',
       left: relLeftPx + 'px'
     },
-    dimensions: { width: '350px', height: 'auto' },
-    color: '#ffffff',
+    dimensions: { width: '420px', height: '320px' },
+    color: 'rgba(247, 245, 158, 0.85)', // Mild sticky-note yellow
     title: text.substring(0, 30) + (text.length > 30 ? '...' : ''),
     zIndex: 1000,
     stackId: null,
@@ -1377,24 +1791,38 @@ document.addEventListener('mouseup', () => {
 
 // ========== SPA Navigation watcher ==========
 let lastChatId = getCurrentChatId();
-console.log(`[Entropy] Initial chat ID: ${lastChatId}`);
+let lastUrl = window.location.href;
+debugLog(`Initial chat ID: ${lastChatId}, URL: ${lastUrl}`);
 
 setInterval(() => {
+  const currentUrl = window.location.href;
   const chatId = getCurrentChatId();
-  if (chatId !== lastChatId) {
-    console.log(`[Entropy] === NAVIGATION DETECTED ===`);
-    console.log(`[Entropy] Changed from chat ${lastChatId} to chat ${chatId}`);
+  
+  // Check if either the chat ID or the full URL has changed
+  if (chatId !== lastChatId || currentUrl !== lastUrl) {
+    debugLog(`Navigation detected: ${lastChatId} → ${chatId}`);
+    debugLog(`URL changed: ${lastUrl} → ${currentUrl}`);
+    
     lastChatId = chatId;
+    lastUrl = currentUrl;
+    
+    debugLog(`Clearing stickies and loading for new chat...`);
     removeAllStickiesFromDOM();
-    loadStickiesForPage();
+    
+    // Small delay to ensure page is ready
+    setTimeout(() => {
+      loadStickiesForPage();
+    }, 100);
   }
-}, 400);
+}, 200); // Check more frequently
 
 // ========== On page load ==========
 window.addEventListener('DOMContentLoaded', async () => {
-  console.log('[Entropy] DOMContentLoaded - starting page load');
-  console.log('[Entropy] Running COMPLETE storage rebuild...');
-  await rebuildAllChatIndices();
+  log('Entropy extension initialized');
+  if (DEBUG_MODE) {
+    log('Debug mode enabled');
+    await rebuildAllChatIndices();
+  }
   debugStorageForCurrentChat();
   removeAllStickiesFromDOM();
   loadStickiesForPage();
@@ -1416,7 +1844,7 @@ cleanupOldStickies();
 // ========== Ghost Sticky Purge Function ==========
 async function purgeGhostStickies() {
   const currentChatId = getCurrentChatId();
-  console.log(`[Entropy] 👻 PURGING GHOST STICKIES FOR CHAT ${currentChatId}`);
+  debugLog(`Purging ghost stickies for chat ${currentChatId}`);
   
   return new Promise((resolve) => {
     chrome.storage.local.get(null, (allData) => {
@@ -1429,8 +1857,7 @@ async function purgeGhostStickies() {
       const actualStickyKeys = Object.keys(allData)
         .filter(key => key.startsWith(currentChatStickyPattern));
       
-      console.log(`[Entropy] Chat index references: [${chatIndex.join(', ')}]`);
-      console.log(`[Entropy] Actual storage keys: ${actualStickyKeys.length}`);
+      debugLog(`Chat index: ${chatIndex.length} entries, Storage: ${actualStickyKeys.length} keys`);
       
       const keysToRemove = [];
       const validStickyIds = [];
@@ -1440,57 +1867,570 @@ async function purgeGhostStickies() {
         const stickyId = stickyKey.replace(currentChatStickyPattern, '');
         const stickyData = allData[stickyKey];
         
-        // A sticky is valid if:
-        // 1. It has valid data structure
-        // 2. It's referenced in the chat index
+        // A sticky is valid if it has valid data structure and is referenced in the chat index
         const hasValidData = stickyData && stickyData.id === stickyId;
         const isInIndex = chatIndex.includes(stickyId);
         
-        console.log(`[Entropy] Sticky ${stickyId}: validData=${hasValidData}, inIndex=${isInIndex}`);
-        
         if (!hasValidData || !isInIndex) {
-          console.log(`[Entropy] 👻 GHOST STICKY DETECTED: ${stickyId} - marking for removal`);
+          debugLog(`Ghost sticky detected: ${stickyId}`);
           keysToRemove.push(stickyKey);
         } else {
-          console.log(`[Entropy] ✅ Valid sticky: ${stickyId}`);
           validStickyIds.push(stickyId);
         }
       });
       
-      // Also check for IDs in chat index that don't have storage
-      chatIndex.forEach(stickyId => {
-        const stickyKey = `${currentChatStickyPattern}${stickyId}`;
-        if (!allData[stickyKey]) {
-          console.log(`[Entropy] 👻 GHOST INDEX ENTRY DETECTED: ${stickyId} (no storage)`);
-          // This will be cleaned up when we rebuild the index
-        }
-      });
-      
       if (keysToRemove.length > 0 || validStickyIds.length !== chatIndex.length) {
-        console.log(`[Entropy] 💥 Cleaning up ghosts:`);
-        console.log(`[Entropy] - Removing ${keysToRemove.length} ghost storage keys`);
-        console.log(`[Entropy] - Updating chat index: [${chatIndex.join(', ')}] → [${validStickyIds.join(', ')}]`);
+        log(`Cleaning up ${keysToRemove.length} ghost stickies`);
         
         // Remove ghost storage keys
         if (keysToRemove.length > 0) {
           chrome.storage.local.remove(keysToRemove, () => {
             // Update chat index to only include valid stickies
             chrome.storage.local.set({ [chatKey]: validStickyIds }, () => {
-              console.log(`[Entropy] ✅ Ghost purge complete. Valid stickies: [${validStickyIds.join(', ')}]`);
+              debugLog(`Ghost purge complete. Valid stickies: ${validStickyIds.length}`);
               resolve();
             });
           });
         } else {
           // Just update the chat index
           chrome.storage.local.set({ [chatKey]: validStickyIds }, () => {
-            console.log(`[Entropy] ✅ Ghost purge complete. Valid stickies: [${validStickyIds.join(', ')}]`);
+            debugLog(`Ghost purge complete. Valid stickies: ${validStickyIds.length}`);
             resolve();
           });
         }
       } else {
-        console.log(`[Entropy] ✅ No ghost stickies found`);
+        debugLog(`No ghost stickies found`);
         resolve();
       }
     });
   });
+}
+
+// Add minimap functionality
+class MinimapPanel {
+  constructor() {
+    this.element = null;
+    this.isVisible = true;
+    this.isFullscreen = false;
+    this.isResizing = false;
+    this.defaultWidth = 250;
+    this.defaultHeight = 180;
+    this.fullscreenWidth = Math.min(800, window.innerWidth * 0.8);
+    this.fullscreenHeight = Math.min(600, window.innerHeight * 0.8);
+    this.currentWidth = this.defaultWidth;
+    this.currentHeight = this.defaultHeight;
+    
+    this.createMinimap();
+    this.updateMinimap();
+    
+    // Update minimap when stickies change
+    setInterval(() => this.updateMinimap(), 2000);
+    
+    // Update on window resize
+    window.addEventListener('resize', () => this.updateMinimap());
+  }
+
+  createMinimap() {
+    this.element = document.createElement('div');
+    this.element.className = 'entropy-minimap';
+    this.updateMinimapStyles();
+
+    const header = document.createElement('div');
+    header.style.cssText = `
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+      user-select: none;
+    `;
+    header.innerHTML = `
+      <span>Sticky Notes Map</span>
+      <div class="minimap-controls">
+        <button class="minimap-fullscreen" style="background: none; border: none; color: white; cursor: pointer; font-size: 14px; margin-right: 5px;" title="Toggle Fullscreen">⛶</button>
+        <button class="minimap-toggle" style="background: none; border: none; color: white; cursor: pointer; font-size: 14px;" title="Minimize/Maximize">−</button>
+      </div>
+    `;
+
+    this.mapContainer = document.createElement('div');
+    this.updateMapContainerStyles();
+
+    // Resize handle
+    this.resizeHandle = document.createElement('div');
+    this.resizeHandle.style.cssText = `
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 15px;
+      height: 15px;
+      background: linear-gradient(-45deg, transparent 30%, rgba(255,255,255,0.3) 30%, rgba(255,255,255,0.3) 70%, transparent 70%);
+      cursor: nw-resize;
+      border-radius: 0 0 8px 0;
+    `;
+
+    this.element.appendChild(header);
+    this.element.appendChild(this.mapContainer);
+    this.element.appendChild(this.resizeHandle);
+    document.body.appendChild(this.element);
+
+    this.setupEventListeners(header);
+  }
+
+  updateMinimapStyles() {
+    const baseStyles = `
+      position: fixed;
+      background: rgba(0, 0, 0, 0.85);
+      border: 2px solid #333;
+      border-radius: 8px;
+      z-index: 999999;
+      padding: 10px;
+      backdrop-filter: blur(8px);
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    `;
+
+    if (this.isFullscreen) {
+      this.element.style.cssText = baseStyles + `
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: ${this.fullscreenWidth}px;
+        height: ${this.fullscreenHeight}px;
+        border-color: #4CAF50;
+      `;
+    } else {
+      this.element.style.cssText = baseStyles + `
+        top: 20px;
+        right: 20px;
+        width: ${this.currentWidth}px;
+        height: ${this.currentHeight}px;
+      `;
+    }
+  }
+
+  updateMapContainerStyles() {
+    const containerHeight = this.isFullscreen 
+      ? this.fullscreenHeight - 60 
+      : this.currentHeight - 60;
+    
+    this.mapContainer.style.cssText = `
+      width: 100%;
+      height: ${containerHeight}px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    `;
+  }
+
+  setupEventListeners(header) {
+    // Toggle visibility
+    header.querySelector('.minimap-toggle').addEventListener('click', () => {
+      this.isVisible = !this.isVisible;
+      this.mapContainer.style.display = this.isVisible ? 'block' : 'none';
+      this.resizeHandle.style.display = this.isVisible ? 'block' : 'none';
+      header.querySelector('.minimap-toggle').textContent = this.isVisible ? '−' : '+';
+    });
+
+    // Toggle fullscreen
+    header.querySelector('.minimap-fullscreen').addEventListener('click', () => {
+      this.isFullscreen = !this.isFullscreen;
+      this.updateMinimapStyles();
+      this.updateMapContainerStyles();
+      this.updateMinimap();
+      
+      // Update fullscreen button
+      const fullscreenBtn = header.querySelector('.minimap-fullscreen');
+      fullscreenBtn.textContent = this.isFullscreen ? '⛶' : '⛶';
+      fullscreenBtn.style.color = this.isFullscreen ? '#4CAF50' : 'white';
+    });
+
+    // Dragging functionality
+    let isDragging = false;
+    let dragOffset = { x: 0, y: 0 };
+
+    header.addEventListener('mousedown', (e) => {
+      if (this.isFullscreen) return;
+      isDragging = true;
+      const rect = this.element.getBoundingClientRect();
+      dragOffset.x = e.clientX - rect.left;
+      dragOffset.y = e.clientY - rect.top;
+      header.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging || this.isFullscreen) return;
+      const x = e.clientX - dragOffset.x;
+      const y = e.clientY - dragOffset.y;
+      this.element.style.right = 'auto';
+      this.element.style.left = `${Math.max(0, Math.min(x, window.innerWidth - this.currentWidth))}px`;
+      this.element.style.top = `${Math.max(0, Math.min(y, window.innerHeight - this.currentHeight))}px`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      isDragging = false;
+      header.style.cursor = 'move';
+    });
+
+    // Resizing functionality
+    this.resizeHandle.addEventListener('mousedown', (e) => {
+      if (this.isFullscreen) return;
+      e.stopPropagation();
+      this.isResizing = true;
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startWidth = this.currentWidth;
+      const startHeight = this.currentHeight;
+
+      const handleResize = (e) => {
+        if (!this.isResizing) return;
+        this.currentWidth = Math.max(200, startWidth + (e.clientX - startX));
+        this.currentHeight = Math.max(150, startHeight + (e.clientY - startY));
+        this.updateMinimapStyles();
+        this.updateMapContainerStyles();
+        this.updateMinimap();
+      };
+
+      const stopResize = () => {
+        this.isResizing = false;
+        document.removeEventListener('mousemove', handleResize);
+        document.removeEventListener('mouseup', stopResize);
+      };
+
+      document.addEventListener('mousemove', handleResize);
+      document.addEventListener('mouseup', stopResize);
+    });
+
+    // Close fullscreen on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isFullscreen) {
+        this.isFullscreen = false;
+        this.updateMinimapStyles();
+        this.updateMapContainerStyles();
+        this.updateMinimap();
+        header.querySelector('.minimap-fullscreen').style.color = 'white';
+      }
+    });
+  }
+
+  updateMinimap() {
+    if (!this.mapContainer) return;
+
+    // Clear existing dots
+    this.mapContainer.innerHTML = '';
+
+    // Get all sticky notes
+    const stickies = StickyNote.allNotes.filter(note => note.element && note.element.style.display !== 'none');
+    
+    if (stickies.length === 0) return;
+
+    const mapWidth = this.mapContainer.offsetWidth;
+    const mapHeight = this.mapContainer.offsetHeight;
+    const dotSize = this.isFullscreen ? 12 : 8;
+    const showLabels = this.isFullscreen;
+    
+    // Create conversation timeline structure
+    const timelineData = this.createConversationTimeline(stickies, mapWidth, mapHeight);
+    
+    // Draw the main conversation timeline (vertical backbone)
+    this.drawMainTimeline(timelineData);
+    
+    // Draw branches and sticky nodes
+    this.drawStickyBranches(timelineData, dotSize, showLabels);
+
+    // Add current viewport indicator
+    this.drawViewportIndicator(timelineData);
+  }
+
+  createConversationTimeline(stickies, mapWidth, mapHeight) {
+    // Sort stickies by their position in the conversation (scroll position as proxy)
+    const sortedStickies = [...stickies].sort((a, b) => {
+      const rectA = a.element.getBoundingClientRect();
+      const rectB = b.element.getBoundingClientRect();
+      return (rectA.top + window.scrollY) - (rectB.top + window.scrollY);
+    });
+
+    // Calculate timeline parameters
+    const timelineX = this.isFullscreen ? 100 : 50; // X position of main timeline
+    const timelineStartY = 30;
+    const timelineEndY = mapHeight - 30;
+    const timelineHeight = timelineEndY - timelineStartY;
+    
+    // Group stickies by stacks and calculate positions
+    const stickyGroups = this.groupStickiesByStack(sortedStickies);
+    const timelineNodes = [];
+    
+    stickyGroups.forEach((group, index) => {
+      // Calculate Y position along timeline based on conversation order
+      const progress = stickyGroups.length > 1 ? index / (stickyGroups.length - 1) : 0.5;
+      const timelineY = timelineStartY + (progress * timelineHeight);
+      
+      // Calculate branch positions for stickies in this group
+      const branchLength = this.isFullscreen ? 150 : 80;
+      const branchStartX = timelineX + 20;
+      const branchSpacing = this.isFullscreen ? 40 : 25;
+      
+      group.forEach((sticky, stackIndex) => {
+        const branchX = branchStartX + (stackIndex * branchSpacing);
+        
+        timelineNodes.push({
+          sticky: sticky,
+          timelineX: timelineX,
+          timelineY: timelineY,
+          branchX: branchX,
+          branchY: timelineY,
+          isMainNode: stackIndex === 0, // First sticky in group connects to timeline
+          stackIndex: stackIndex,
+          groupIndex: index
+        });
+      });
+    });
+
+    return {
+      timelineX,
+      timelineStartY,
+      timelineEndY,
+      timelineHeight,
+      nodes: timelineNodes,
+      mapWidth,
+      mapHeight
+    };
+  }
+
+  groupStickiesByStack(stickies) {
+    const groups = [];
+    const processed = new Set();
+    
+    stickies.forEach(sticky => {
+      if (processed.has(sticky.data.id)) return;
+      
+      const group = [sticky];
+      processed.add(sticky.data.id);
+      
+      // Find stickies in the same stack
+      if (sticky.stackId) {
+        stickies.forEach(otherSticky => {
+          if (processed.has(otherSticky.data.id)) return;
+          if (sticky.stackId === otherSticky.stackId) {
+            group.push(otherSticky);
+            processed.add(otherSticky.data.id);
+          }
+        });
+      }
+      
+      groups.push(group);
+    });
+    
+    return groups;
+  }
+
+  drawMainTimeline(timelineData) {
+    const { timelineX, timelineStartY, timelineEndY } = timelineData;
+    
+    // Main conversation timeline (vertical line)
+    const timeline = document.createElement('div');
+    timeline.style.cssText = `
+      position: absolute;
+      left: ${timelineX}px;
+      top: ${timelineStartY}px;
+      width: 3px;
+      height: ${timelineEndY - timelineStartY}px;
+      background: linear-gradient(180deg, #4CAF50, #2196F3, #9C27B0);
+      border-radius: 2px;
+      z-index: 2;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+    `;
+    this.mapContainer.appendChild(timeline);
+    
+    // Add timeline markers
+    timelineData.nodes.forEach(node => {
+      if (node.isMainNode) {
+        const marker = document.createElement('div');
+        marker.style.cssText = `
+          position: absolute;
+          left: ${timelineX - 4}px;
+          top: ${node.timelineY - 4}px;
+          width: 11px;
+          height: 11px;
+          background: white;
+          border: 2px solid #4CAF50;
+          border-radius: 50%;
+          z-index: 3;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        `;
+        this.mapContainer.appendChild(marker);
+      }
+    });
+  }
+
+  drawStickyBranches(timelineData, dotSize, showLabels) {
+    const { nodes } = timelineData;
+    
+    nodes.forEach(node => {
+      const { sticky, timelineX, timelineY, branchX, branchY, isMainNode, stackIndex } = node;
+      
+      // Draw branch line from timeline to sticky
+      if (isMainNode) {
+        // Direct connection from timeline to first sticky
+        this.drawBranchLine(timelineX + 10, timelineY, branchX - 5, branchY, sticky.color || '#14532d');
+      } else {
+        // Connection from previous sticky in stack
+        const prevNode = nodes.find(n => 
+          n.groupIndex === node.groupIndex && n.stackIndex === stackIndex - 1
+        );
+        if (prevNode) {
+          this.drawBranchLine(prevNode.branchX + dotSize/2, prevNode.branchY, branchX - 5, branchY, sticky.color || '#14532d');
+        }
+      }
+      
+      // Draw sticky node
+      this.drawStickyNode(sticky, branchX, branchY, dotSize, showLabels);
+    });
+  }
+
+  drawBranchLine(x1, y1, x2, y2, color) {
+    const line = document.createElement('div');
+    const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+    const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+    
+    line.style.cssText = `
+      position: absolute;
+      left: ${x1}px;
+      top: ${y1}px;
+      width: ${length}px;
+      height: 2px;
+      background: linear-gradient(90deg, ${color}CC, ${color}80);
+      transform-origin: 0 50%;
+      transform: rotate(${angle}deg);
+      z-index: 1;
+      pointer-events: none;
+      border-radius: 1px;
+    `;
+    
+    this.mapContainer.appendChild(line);
+  }
+
+  drawStickyNode(sticky, x, y, dotSize, showLabels) {
+    const dotContainer = document.createElement('div');
+    dotContainer.style.cssText = `
+      position: absolute;
+      left: ${x}px;
+      top: ${y - dotSize/2}px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      z-index: 10;
+    `;
+
+    const dot = document.createElement('div');
+    dot.style.cssText = `
+      width: ${dotSize}px;
+      height: ${dotSize}px;
+      border-radius: 50%;
+      background: ${sticky.color || '#14532d'};
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+    `;
+    
+    dotContainer.appendChild(dot);
+
+    // Add label in fullscreen mode
+    if (showLabels) {
+      const label = document.createElement('span');
+      label.textContent = sticky.title || 'Untitled';
+      label.style.cssText = `
+        color: white;
+        font-size: 11px;
+        font-weight: 500;
+        margin-left: 8px;
+        background: rgba(0, 0, 0, 0.8);
+        padding: 3px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(4px);
+      `;
+      dotContainer.appendChild(label);
+    }
+    
+    dotContainer.title = sticky.title || 'Untitled';
+    
+    // Click to navigate
+    dotContainer.addEventListener('click', () => {
+      sticky.element.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'center'
+      });
+      
+      // Highlight the sticky briefly
+      const originalBorder = sticky.element.style.border;
+      sticky.element.style.border = '3px solid #ff6b6b';
+      setTimeout(() => {
+        sticky.element.style.border = originalBorder;
+      }, 1000);
+    });
+    
+    // Hover effects
+    dotContainer.addEventListener('mouseenter', () => {
+      dot.style.transform = 'scale(1.4)';
+      dotContainer.style.zIndex = '20';
+      if (showLabels) {
+        dotContainer.style.transform = 'scale(1.05)';
+      }
+    });
+    
+    dotContainer.addEventListener('mouseleave', () => {
+      dot.style.transform = 'scale(1)';
+      dotContainer.style.zIndex = '10';
+      if (showLabels) {
+        dotContainer.style.transform = 'scale(1)';
+      }
+    });
+    
+    this.mapContainer.appendChild(dotContainer);
+  }
+
+  drawViewportIndicator(timelineData) {
+    // Calculate current viewport position relative to conversation
+    const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1);
+    const indicatorY = timelineData.timelineStartY + (scrollPercent * timelineData.timelineHeight);
+    
+    const viewport = document.createElement('div');
+    viewport.style.cssText = `
+      position: absolute;
+      left: ${timelineData.timelineX - 15}px;
+      top: ${indicatorY - 2}px;
+      width: 33px;
+      height: 4px;
+      background: rgba(255, 193, 7, 0.8);
+      border: 1px solid #FFC107;
+      border-radius: 2px;
+      z-index: 5;
+      pointer-events: none;
+      box-shadow: 0 0 8px rgba(255, 193, 7, 0.4);
+    `;
+    
+    this.mapContainer.appendChild(viewport);
+  }
+}
+
+// Initialize minimap when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => new MinimapPanel(), 1000);
+  });
+} else {
+  setTimeout(() => new MinimapPanel(), 1000);
 }
